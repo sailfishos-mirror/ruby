@@ -556,7 +556,7 @@ struct io_buffer_for_func_arguments {
     VALUE string;
     VALUE instance;
     enum rb_io_buffer_flags flags;
-    VALUE (*func)(VALUE, VALUE);
+    VALUE (*callback)(VALUE, VALUE);
     VALUE argument;
 };
 
@@ -565,13 +565,13 @@ io_buffer_for_func_call(VALUE _arguments)
 {
     struct io_buffer_for_func_arguments *arguments = (struct io_buffer_for_func_arguments *)_arguments;
 
-    arguments->instance = io_buffer_for_make_instance(arguments->klass, arguments->string, arguments->flags);
-
     if (!RB_OBJ_FROZEN(arguments->string)) {
         rb_str_locktmp(arguments->string);
     }
 
-    return arguments->func(arguments->instance, arguments->argument);
+    arguments->instance = io_buffer_for_make_instance(arguments->klass, arguments->string, arguments->flags);
+
+    return arguments->callback(arguments->instance, arguments->argument);
 }
 
 static VALUE
@@ -591,10 +591,10 @@ io_buffer_for_func_ensure(VALUE _arguments)
 }
 
 VALUE
-rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*func)(VALUE, VALUE), VALUE argument)
+rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*callback)(VALUE, VALUE), VALUE argument)
 {
     if (rb_obj_is_kind_of(string_or_buffer, rb_cIOBuffer)) {
-        return func(string_or_buffer, argument);
+        return callback(string_or_buffer, argument);
     }
     else if (RB_TYPE_P(string_or_buffer, T_STRING)) {
         StringValue(string_or_buffer);
@@ -603,7 +603,7 @@ rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*func)(VALUE, VALUE), VA
             .string = string_or_buffer,
             .instance = Qnil,
             .flags = RB_IO_BUFFER_READONLY,
-            .func = func,
+            .callback = callback,
             .argument = argument,
         };
         return rb_ensure(io_buffer_for_func_call, (VALUE)&arguments,
@@ -619,13 +619,13 @@ rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*func)(VALUE, VALUE), VA
 int rb_io_buffer_readonly_p(VALUE self);
 
 VALUE
-rb_io_buffer_for_writing(VALUE string_or_buffer, VALUE (*func)(VALUE, VALUE), VALUE argument)
+rb_io_buffer_for_writing(VALUE string_or_buffer, VALUE (*callback)(VALUE, VALUE), VALUE argument)
 {
     if (rb_obj_is_kind_of(string_or_buffer, rb_cIOBuffer)) {
         if (rb_io_buffer_readonly_p(string_or_buffer)) {
             rb_raise(rb_eArgError, "buffer is read-only");
         }
-        return func(string_or_buffer, argument);
+        return callback(string_or_buffer, argument);
     }
     else if (RB_TYPE_P(string_or_buffer, T_STRING)) {
         StringValue(string_or_buffer);
@@ -634,7 +634,7 @@ rb_io_buffer_for_writing(VALUE string_or_buffer, VALUE (*func)(VALUE, VALUE), VA
             .string = string_or_buffer,
             .instance = Qnil,
             .flags = 0,
-            .func = func,
+            .callback = callback,
             .argument = argument,
         };
         return rb_ensure(io_buffer_for_func_call, (VALUE)&arguments,

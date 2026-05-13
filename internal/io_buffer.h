@@ -6,7 +6,7 @@
 RUBY_SYMBOL_EXPORT_BEGIN
 
 /**
- * Wrap string_or_buffer as a read-only IO::Buffer view and invoke func(buffer, arg).
+ * Wrap string_or_buffer as a read-only IO::Buffer view and invoke func(buffer, argument).
  *
  * - IO::Buffer: func is called directly with no wrapping.
  * - String: locked (preventing GC compaction from moving the backing memory),
@@ -14,10 +14,10 @@ RUBY_SYMBOL_EXPORT_BEGIN
  *   freed and string unlocked on exit.
  * - Other: TypeError raised.
  */
-VALUE rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*func)(VALUE buffer, VALUE argument), VALUE argument);
+VALUE rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*callback)(VALUE buffer, VALUE argument), VALUE argument);
 
 /**
- * Wrap string_or_buffer as a writable IO::Buffer view and invoke func(buffer, arg).
+ * Wrap string_or_buffer as a writable IO::Buffer view and invoke func(buffer, argument).
  *
  * - Read-only IO::Buffer: ArgumentError raised.
  * - IO::Buffer: func is called directly with no wrapping.
@@ -25,6 +25,6 @@ VALUE rb_io_buffer_for_reading(VALUE string_or_buffer, VALUE (*func)(VALUE buffe
  *   rb_ensure, buffer freed and string unlocked on exit.
  * - Other: TypeError raised.
  */
-VALUE rb_io_buffer_for_writing(VALUE string_or_buffer, VALUE (*func)(VALUE buffer, VALUE argument), VALUE argument);
+VALUE rb_io_buffer_for_writing(VALUE string_or_buffer, VALUE (*callback)(VALUE buffer, VALUE argument), VALUE argument);
 
 RUBY_SYMBOL_EXPORT_END
