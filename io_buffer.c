@@ -20,6 +20,7 @@
 #include "internal/numeric.h"
 #include "internal/string.h"
 #include "internal/io.h"
+#include "internal/io_buffer.h"
 
 VALUE rb_cIOBuffer;
 VALUE rb_eIOBufferLockedError;
@@ -565,11 +566,11 @@ io_buffer_for_func_call(VALUE _arguments)
 {
     struct io_buffer_for_func_arguments *arguments = (struct io_buffer_for_func_arguments *)_arguments;
 
+    arguments->instance = io_buffer_for_make_instance(arguments->klass, arguments->string, arguments->flags);
+
     if (!RB_OBJ_FROZEN(arguments->string)) {
         rb_str_locktmp(arguments->string);
     }
-
-    arguments->instance = io_buffer_for_make_instance(arguments->klass, arguments->string, arguments->flags);
 
     return arguments->callback(arguments->instance, arguments->argument);
 }
